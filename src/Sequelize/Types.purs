@@ -25,19 +25,30 @@
 
 module Sequelize.Types where
 
-import Control.Monad.Eff (kind Effect)
-import Data.Foreign (Foreign)
+import Effect
+--import Control.Monad.Eff (kind Effect)
+
+import Foreign (Foreign)
+--import Data.Foreign (Foreign)
+
 import Data.Maybe (Maybe(..))
 import Data.Newtype (class Newtype)
 import Data.Options (Options)
-import Data.StrMap (StrMap)
+
+import Foreign.Object (fromFoldable)
+--import Data.StrMap (StrMap)
+
 import Data.String.Regex (Regex)
 import Data.Tuple (Tuple)
 
+import Data.Map
+
 foreign import null :: Foreign
 
+
 -- | the effect of using Sequelize
-foreign import data SEQUELIZE :: Effect
+-- foreign import data SEQUELIZE :: Type -> Type
+foreign import data SEQUELIZE :: Type
 
 -- | Transaction Instance Created by sequelize.transaction()
 foreign import data Transaction :: Type
@@ -114,3 +125,5 @@ foreign import data Instance :: Type -> Type
 newtype Alias = Alias String
 
 derive instance newtypeAlias :: Newtype Alias _
+
+type StrMap a = Map String a

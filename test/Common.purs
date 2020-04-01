@@ -27,9 +27,17 @@ module Test.Common where
 
 import Prelude
 
-import Control.Monad.Aff (Aff)
-import Data.Foreign (toForeign)
-import Data.Foreign.Class (class Decode, class Encode)
+import Data.Map
+
+import Effect.Aff (Aff, makeAff)
+-- import Control.Monad.Aff (Aff)
+
+import Foreign (unsafeToForeign)
+-- import Data.Foreign (unsafeToForeign)
+
+import Foreign.Class (class Decode, class Encode)
+-- import Data.Foreign.Class (class Decode, class Encode)
+
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
 import Data.Maybe (Maybe(..))
@@ -66,7 +74,7 @@ getCarCols = ["model" /\ modelOpts, "make" /\ makeOpts, "hp" /\ hpOpts]
     makeOpts = columnType := ModelTypes.String {length: Nothing}
     hpOpts = columnType := ModelTypes.Integer {length: Nothing}
 
-getCarModel :: forall e. Aff (sequelize :: SEQUELIZE | e) (ModelOf Car)
+getCarModel :: forall e. Aff (ModelOf Car)
 getCarModel = do
   conn <- myConn
   car <- makeModelOf conn mempty
@@ -94,7 +102,7 @@ getCompanyCols = ["name" /\ nameOpts]
   where
   nameOpts =
     columnType := ModelTypes.String {length: Nothing} <>
-    defaultValue := toForeign "ACME Co"
+    defaultValue := unsafeToForeign "ACME Co"
 
 newtype User = User { name :: String }
 derive instance eqUser :: Eq User
@@ -111,13 +119,13 @@ instance decodeModelUser :: DecodeModel User where
   decodeModel x = genericDecodeModel x
 instance isModelUser :: Model User where
   modelCols = userCols
-  modelName _ = "user"
+  modelName _ = "user"  
 userCols :: ModelCols User
 userCols = ["name" /\ nameOpts]
   where
   nameOpts =
     columnType := ModelTypes.String {length: Nothing} <>
-    defaultValue := toForeign "me"
+    defaultValue := unsafeToForeign "me"
 
 newtype SuperUser = SuperUser { name :: String, employerId :: Int }
 derive instance eqSuperUser :: Eq SuperUser
@@ -140,25 +148,19 @@ superUserCols = ["name" /\ nameOpts]
   where
   nameOpts =
     columnType := ModelTypes.String {length: Nothing} <>
-    defaultValue := toForeign "me"
+    defaultValue := unsafeToForeign "me"
 
-instance userSubSuper :: Submodel User SuperUser where
-  project (SuperUser {name}) = User {name}
+-- instance userSubSuper :: Submodel User SuperUser where
+--  project (SuperUser {name}) = User {name}
 
-myConn :: forall e. Aff (sequelize :: SEQUELIZE | e) Conn
+myConn :: Aff Conn
 myConn = getConn opts
   where
     opts = database := "thunder"
         <> dialect := SQLite
         <> storage := "./test.sqlite"
 
-getUserAndCompany
-  :: forall e
-   .
-  Aff ( sequelize :: SEQUELIZE | e )
-    { company :: ModelOf Company
-    , user :: ModelOf User
-    }
+getUserAndCompany :: Aff { company :: ModelOf Company, user :: ModelOf User }
 getUserAndCompany = do
   conn <- myConn
   company <- makeModelOf conn mempty
@@ -167,3 +169,6 @@ getUserAndCompany = do
   company `hasOne` user $ Alias "employee"
   syncConn conn defaultSyncOpts {force = true}
   pure {company, user}
+
+
+type StrMap a = Map String a

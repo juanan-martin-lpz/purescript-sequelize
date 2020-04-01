@@ -27,11 +27,12 @@ module Sequelize.Free.Read where
 
 import Prelude
 
-import Control.Monad.Aff (Aff)
 import Data.Either (Either)
-import Data.Maybe (Maybe)
 import Data.Functor.Coproduct (Coproduct, coproduct)
+import Data.Maybe (Maybe)
 import Data.Options (Options)
+import Effect.Aff (Aff)
+import Math (e)
 import Sequelize.CRUD.Read as Read
 import Sequelize.Class (class Model, class Submodel)
 import Sequelize.Types (Instance, ModelOf, SEQUELIZE)
@@ -52,53 +53,53 @@ data CountF a next
   | Min (Options a) String (Int -> next)
 
 findByIdF :: forall a. Either String Int -> FindF a (Maybe (Instance a))
-findByIdF i = FindById i id
+findByIdF i = FindById i identity
 
 findByStringF :: forall a. String -> FindF a (Maybe (Instance a))
-findByStringF i = FindByString i id
+findByStringF i = FindByString i identity
 
 findByIntF :: forall a. Int -> FindF a (Maybe (Instance a))
-findByIntF i = FindByInt i id
+findByIntF i = FindByInt i identity
 
 findOneF :: forall a. Options a -> FindF a (Maybe (Instance a))
-findOneF o = FindOne o id
+findOneF o = FindOne o identity
 
 findOrBuildF
   :: forall a
    . Options a
   -> FindF a {inst :: Instance a, created :: Boolean}
-findOrBuildF o = FindOrBuild o id
+findOrBuildF o = FindOrBuild o identity
 
 findOrCreateF
   :: forall a
    . Options a
   -> FindF a {inst :: Instance a, created :: Boolean}
-findOrCreateF o = FindOrCreate o id
+findOrCreateF o = FindOrCreate o identity
 
 findAndCountAllF
   :: forall a
    . Options a
   -> FindF a {count :: Int, rows :: Array (Instance a)}
-findAndCountAllF o = FindAndCountAll o id
+findAndCountAllF o = FindAndCountAll o identity
 
 findAllF :: forall a. Options a -> FindF a (Array (Instance a))
-findAllF o = FindAll o id
+findAllF o = FindAll o identity
 
 countF :: forall a. Options a -> CountF a Int
-countF o = Count o id
+countF o = Count o identity
 
 maxF :: forall a. Options a -> String -> CountF a Int
-maxF o key = Max o key id
+maxF o key = Max o key identity
 
 minF :: forall a. Options a -> String -> CountF a Int
-minF o key = Min o key id
+minF o key = Min o key identity
 
 interpretFind
   :: forall a b e
    . Submodel a b
   => ModelOf a
   -> FindF b
-  ~> Aff (sequelize :: SEQUELIZE | e)
+  ~> Aff
 interpretFind model = case _ of
   FindById e k -> k <$> Read.findById model e
   FindByString i k -> k <$> Read.findByStringId model i
@@ -114,7 +115,7 @@ interpretCount
    . Model a
   => ModelOf a
   -> CountF a
-  ~> Aff (sequelize :: SEQUELIZE | e)
+  ~> Aff   -- (sequelize :: SEQUELIZE | e)
 interpretCount model = case _ of
   Count o k -> k <$> Read.count model o
   Max o key k -> k <$> Read.max model o key
@@ -129,5 +130,5 @@ interpretRead
   => Model a
   => ModelOf a
   -> ReadF a b
-  ~> Aff (sequelize :: SEQUELIZE | e)
+  ~> Aff  --(sequelize :: SEQUELIZE | e)
 interpretRead ma = coproduct (interpretFind ma) (interpretCount ma)

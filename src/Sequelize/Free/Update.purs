@@ -27,13 +27,14 @@ module Sequelize.Free.Update where
 
 import Prelude
 
-import Control.Monad.Aff (Aff)
 import Data.Maybe (Maybe)
 import Data.Options (Options)
-import Data.StrMap (StrMap)
+import Effect.Aff (Aff)
+import Math (e)
 import Sequelize.CRUD.Update as Update
 import Sequelize.Class (class Model)
 import Sequelize.Types (Instance, ModelOf, SEQUELIZE)
+import Sequelize.Types (StrMap)
 
 data UpdateF a next
   = Update (Instance a) a next
@@ -58,14 +59,14 @@ updateModelF
    . Options a
   -> Options a
   -> UpdateF a {affectedCount :: Int, affectedRows :: Maybe (Array (Instance a))}
-updateModelF a o = UpdateModel a o id
+updateModelF a o = UpdateModel a o identity
 
 interpretUpdate
   :: forall a e
    . Model a
   => ModelOf a
   -> UpdateF a
-  ~> Aff (sequelize :: SEQUELIZE | e)
+  ~> Aff           --(sequelize :: SEQUELIZE | e)
 interpretUpdate moa = case _ of
   Update inst a next -> next <$ Update.update inst a
   Increment inst strmap next -> next <$ Update.increment inst strmap

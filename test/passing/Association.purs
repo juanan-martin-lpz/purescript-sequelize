@@ -26,15 +26,20 @@
 module Test.Association where
 
 import Test.Prelude
+import Effect.Aff(makeAff)
 
-main :: EffTest () Unit
-main = void $ launchAff associationTest
+import Effect.Class (liftEffect)
+import Test.Common
 
-associationTest :: AffTest () Unit
+
+main :: EffTest ()
+main = launchAff_ associationTest
+
+associationTest :: AffTest Unit 
 associationTest = do
-  {company, user} <- getUserAndCompany
+  { company, user } <- getUserAndCompany
   c1 <- create company $ Company {name: "ACME Co"}
-  let companyId = either (const 0) id $ runExcept do
+  let companyId = either (const 0) identity $ runExcept do
         f <- peek c1 "id"
         readInt f
   su <- create user $ SuperUser {name: "Me", employerId: companyId}

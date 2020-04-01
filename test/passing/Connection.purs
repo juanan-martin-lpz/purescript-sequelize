@@ -29,7 +29,7 @@ import Test.Prelude
 
 import Sequelize.Connection (getConn, username, database, password, dialect, Dialect(..), storage, authenticate)
 
-main :: forall e. Eff (console :: CONSOLE, sequelize :: SEQUELIZE, exception :: EXCEPTION | e) Unit
+main :: forall e. Effect Unit
 main = void $ launchAff do
   conn <- getConn opts
   authenticate conn

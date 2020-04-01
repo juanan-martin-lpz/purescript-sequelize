@@ -36,7 +36,9 @@ module Sequelize.CRUD.Create
 
 import Prelude
 
-import Control.Monad.Aff (Aff)
+import Effect.Aff (Aff)
+-- import Control.Monad.Aff (Aff)
+
 import Control.Promise (Promise, toAff)
 import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
 import Data.Options (Options, options)
@@ -65,7 +67,7 @@ save
   :: forall a e
    . Model a
   => Instance a
-  -> Aff ( sequelize :: SEQUELIZE | e ) (Instance a)
+  -> Aff (Instance a)
 save m = toAff $ _save m
 
 foreign import _create
@@ -81,7 +83,7 @@ create
    . Submodel a b
   => ModelOf a
   -> b
-  -> Aff ( sequelize :: SEQUELIZE | e ) (Instance b)
+  -> Aff (Instance b)
 create m t = toAff $ runFn3 _create m (encodeModel t) {}
 
 create'
@@ -89,7 +91,7 @@ create'
   EncodeModel a
   => ModelOf a
   -> a
-  -> Aff ( sequelize :: SEQUELIZE | e ) (Instance a)
+  -> Aff (Instance a)
 create' m t = toAff $ runFn3 _create m (encodeModel t) {}
 
 foreign import _bulkCreate
@@ -104,7 +106,7 @@ bulkCreate
   :: forall a b e. Submodel a b
   => ModelOf a
   -> Array b
-  -> Aff ( sequelize :: SEQUELIZE | e ) Unit
+  -> Aff Unit
 bulkCreate m arr = toAff $ runFn3 _bulkCreate m (map encodeModel arr) {}
 
 createWithOpts
@@ -113,7 +115,7 @@ createWithOpts
   => ModelOf a
   -> b
   -> Options c
-  -> Aff ( sequelize :: SEQUELIZE | e ) (Instance b)
+  -> Aff (Instance b)
 createWithOpts m t opts = toAff $ runFn3 _create m (encodeModel t) (options opts)
 
 createWithOpts'
@@ -122,7 +124,7 @@ createWithOpts'
   => ModelOf a
   -> a
   -> Options c
-  -> Aff ( sequelize :: SEQUELIZE | e ) (Instance a)
+  -> Aff (Instance a)
 createWithOpts' m t opts = toAff $ runFn3 _create m (encodeModel t) (options opts)
 
 bulkCreateWithOpts
@@ -130,5 +132,5 @@ bulkCreateWithOpts
   => ModelOf a
   -> Array b
   -> Options c
-  -> Aff ( sequelize :: SEQUELIZE | e ) Unit
+  -> Aff Unit
 bulkCreateWithOpts m arr opts = toAff $ runFn3 _bulkCreate m (map encodeModel arr) (options opts)

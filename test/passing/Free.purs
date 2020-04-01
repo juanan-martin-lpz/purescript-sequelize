@@ -25,22 +25,27 @@
 
 module Test.Free where
 
+import Test.Common
 import Test.Prelude
 
-import Data.Foreign (toForeign)
 import Data.Options (Options(..))
-import Data.StrMap as Map
 import Data.String (singleton)
+import Data.String.CodePoints (codePointFromChar)
 import Data.Tuple (Tuple(..))
+import Foreign (unsafeToForeign)
 import Sequelize.Free as SQL
 
+import Data.Map (Map, singleton) as M
+
 type App a = SQL.CRUD Car Car a
+
+type StrMap a = M.Map String a
 
 enterprise :: Char -> Car
 enterprise c
   = Car
   { make: "Federation of Planets"
-  , model: "Enterprise " <> singleton c
+  , model: "Enterprise " <> singleton (codePointFromChar c)
   , hp: 1000000
   }
 
@@ -61,8 +66,8 @@ defiant
   }
 
 updateOpts = Options
-  [ "model" /\ (toForeign "Defiant")
-  , "hp" /\ (toForeign 100000) ]
+  [ "model" /\ (unsafeToForeign "Defiant")
+  , "hp" /\ (unsafeToForeign 100000) ]
 
 
 spaceships :: Array Car
@@ -90,12 +95,12 @@ testR3 = do
   i <- SQL.findByInt 900
   pure case i of
     Just inst -> peek inst "propertyDoesNotExist"
-    _ -> pure $ toForeign unit
+    _ -> pure $ unsafeToForeign unit
 
 testU1 :: App Unit
 testU1 = do
   i <- SQL.create $ enterprise 'F'
-  SQL.increment i (Map.singleton "hp" 1000000)
+  SQL.increment i (M.singleton "hp" 1000000)
 
 testU2 :: App Unit
 testU2 = void $ -- changes voyager to the defiant
@@ -116,7 +121,7 @@ testCRUD = do
   testU2
   testD
 
-main :: EffTest () Unit
+main :: EffTest Unit
 main = void $ launchAff do
   m <- getCarModel
   SQL.runCRUD m testCRUD

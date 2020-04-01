@@ -28,13 +28,20 @@ module Sequelize.Query.Util where
 
 import Prelude
 
-import Control.Monad.Aff (Aff)
-import Control.Monad.Eff.Exception (error)
+import Effect.Aff (Aff)
+-- import Control.Monad.Aff (Aff)
+
+import Effect.Exception (error)
+-- import Control.Monad.Eff.Exception (error)
+
 import Control.Monad.Error.Class (throwError)
 import Control.Monad.Except (runExcept)
 import Control.Promise (Promise, toAff)
 import Data.Either (Either(..))
-import Data.Foreign (Foreign, MultipleErrors, readBoolean)
+
+import Foreign (Foreign, MultipleErrors, readBoolean)
+-- import Data.Foreign (Foreign, MultipleErrors, readBoolean)
+
 import Data.Function.Uncurried (Fn2, Fn3, runFn2, runFn3)
 import Data.List.NonEmpty (foldMap1)
 import Data.Options (Options, options)
@@ -44,18 +51,18 @@ import Unsafe.Coerce (unsafeCoerce)
 
 coerceArrayTuple
   :: forall a e.  Array Foreign
-  -> Aff e {inst :: Instance a, created :: Boolean}
+  -> Aff {inst :: Instance a, created :: Boolean}
 coerceArrayTuple [f1, f2] = case runExcept $ readBoolean f2 of
   Right b -> pure $ {inst: unsafeCoerce f1, created: b}
   Left errs -> throwMultipleErrors errs
 coerceArrayTuple _ = throwError $ error "Could not coerce the return type"
 
-throwMultipleErrors :: forall a e. MultipleErrors -> Aff e a
+throwMultipleErrors :: forall a e. MultipleErrors -> Aff a
 throwMultipleErrors errs =
   let errString = foldMap1 show errs
    in throwError $ error errString
 
-promiseToAff2 :: forall a b c d. Fn2 a Foreign (Promise b) -> a -> Options c -> Aff d b
+promiseToAff2 :: forall a b c d. Fn2 a Foreign (Promise b) -> a -> Options c -> Aff b
 promiseToAff2 fn m o = toAff $ runFn2 fn m $ options o
 
 promiseToAff3
@@ -64,5 +71,5 @@ promiseToAff3
   -> ModelOf a
   -> Options a
   -> c
-  -> Aff ( sequelize :: SEQUELIZE | e ) b
+  -> Aff b
 promiseToAff3 fn m o third = toAff $ runFn3 fn m (options o) third
